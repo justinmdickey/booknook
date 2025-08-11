@@ -34,9 +34,9 @@ export function BookCard({ book }: BookCardProps) {
 
   return (
     <Link href={`/books/${book.id}`}>
-      <Card className="overflow-hidden hover:shadow-lg transition-all hover:scale-[1.02] cursor-pointer">
-        <CardContent className="p-3 md:p-4">
-        <div className="flex gap-2 md:gap-3">
+      <Card className="overflow-hidden hover:shadow-lg transition-all hover:scale-[1.02] cursor-pointer h-32 md:h-36">
+        <CardContent className="p-3 md:p-4 h-full">
+        <div className="flex gap-2 md:gap-3 h-full">
           <div className="w-12 h-18 md:w-16 md:h-24 relative bg-gray-100 dark:bg-gray-800 rounded flex-shrink-0">
             {book.coverUrl && !imageError ? (
               <Image
@@ -55,13 +55,15 @@ export function BookCard({ book }: BookCardProps) {
               </div>
             )}
           </div>
-          <div className="flex-1 min-w-0">
-            <h3 className="font-semibold text-sm md:text-base line-clamp-2">{book.title}</h3>
-            <p className="text-xs md:text-sm text-muted-foreground line-clamp-1">{book.author}</p>
-            {book.genre && (
-              <p className="text-xs text-muted-foreground line-clamp-1 hidden md:block">{book.genre}</p>
-            )}
-            <div className="flex items-center gap-1 md:gap-2 mt-1 md:mt-2">
+          <div className="flex-1 min-w-0 flex flex-col justify-between overflow-hidden">
+            <div className="overflow-hidden">
+              <h3 className="font-semibold text-sm md:text-base line-clamp-2 leading-tight">{book.title}</h3>
+              <p className="text-xs md:text-sm text-muted-foreground line-clamp-1 mt-0.5">{book.author}</p>
+              {book.genre && (
+                <p className="text-xs text-muted-foreground line-clamp-1 hidden md:block mt-0.5">{book.genre}</p>
+              )}
+            </div>
+            <div className="flex items-center gap-1 md:gap-2 mt-1">
               <span className={`text-xs px-2 py-0.5 rounded-full ${getStatusColor(book.status)}`}>
                 {book.status}
               </span>

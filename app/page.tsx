@@ -104,9 +104,9 @@ export default function Home() {
     return [...books].sort((a, b) => {
       switch (sortBy) {
         case 'title':
-          return a.title.localeCompare(b.title)
+          return getTitleForSorting(a.title).localeCompare(getTitleForSorting(b.title))
         case 'author':
-          return a.author.localeCompare(b.author)
+          return getLastNameForSorting(a.author).localeCompare(getLastNameForSorting(b.author))
         case 'rating':
           return (b.rating || 0) - (a.rating || 0)
         case 'status':
@@ -115,6 +115,78 @@ export default function Home() {
           return 0
       }
     })
+  }
+
+  const getLastNameForSorting = (authorName: string) => {
+    const parts = authorName.trim().split(/\s+/)
+    
+    if (parts.length === 1) return parts[0]
+    
+    // Handle suffixes (Jr., Sr., III, etc.)
+    const suffixes = ['Jr.', 'Sr.', 'II', 'III', 'IV', 'Jr', 'Sr']
+    let lastName = parts[parts.length - 1]
+    
+    if (suffixes.includes(lastName) && parts.length > 2) {
+      lastName = parts[parts.length - 2]
+    }
+    
+    // Handle prefixes (van, de, von, etc.) - keep them with surname
+    const prefixes = ['van', 'de', 'von', 'del', 'da', 'di', 'le', 'la', 'el']
+    if (parts.length > 2 && prefixes.includes(parts[parts.length - 2].toLowerCase())) {
+      lastName = parts[parts.length - 2] + ' ' + lastName
+    }
+    
+    return lastName
+  }
+
+  const getTitleForSorting = (title: string) => {
+    // Common articles to ignore (English, Spanish, French, German, Italian)
+    const articles = [
+      'the', 'a', 'an',           // English
+      'el', 'la', 'los', 'las',   // Spanish
+      'le', 'la', 'les',          // French
+      'der', 'die', 'das',        // German
+      'il', 'lo', 'gli', 'le'     // Italian
+    ]
+    
+    const words = title.trim().split(/\s+/)
+    
+    if (words.length === 1) return title
+    
+    const firstWord = words[0].toLowerCase()
+    
+    // If first word is an article, remove it
+    if (articles.includes(firstWord)) {
+      return words.slice(1).join(' ')
+    }
+    
+    return title
+  }
+
+  const groupBooksByLetter = (books: Book[], groupBy: 'title' | 'author' = 'title') => {
+    const sorted = sortBooks(books)
+    const grouped: { [key: string]: Book[] } = {}
+    
+    sorted.forEach(book => {
+      let text: string
+      if (groupBy === 'title') {
+        // For title, ignore articles like "The", "A", etc.
+        text = getTitleForSorting(book.title)
+      } else {
+        // For author, use the last name for grouping
+        text = getLastNameForSorting(book.author)
+      }
+      
+      const firstLetter = text.charAt(0).toUpperCase()
+      const letter = /[A-Z]/.test(firstLetter) ? firstLetter : '#'
+      
+      if (!grouped[letter]) {
+        grouped[letter] = []
+      }
+      grouped[letter].push(book)
+    })
+    
+    return grouped
   }
 
 
@@ -184,16 +256,16 @@ export default function Home() {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-              className="flex-1"
+              className="flex-1 h-9"
             />
-            <Button onClick={handleSearch} variant="outline" size="sm">
+            <Button onClick={handleSearch} variant="outline" size="sm" className="px-2 md:px-4">
               <Search className="h-4 w-4" />
             </Button>
             <Button 
               onClick={() => setShowFilters(!showFilters)} 
               variant="outline" 
               size="sm"
-              className="px-2"
+              className="px-2 md:px-4"
             >
               <Filter className="h-4 w-4" />
             </Button>
@@ -292,13 +364,76 @@ export default function Home() {
             </Link>
           </div>
         ) : (
-          <div className="grid gap-3 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-            {sortBooks(books).map((book) => (
-              <BookCard
-                key={book.id}
-                book={book}
-              />
-            ))}
+          <div className="flex gap-6">
+            <div className="flex-1 space-y-6">
+              {(sortBy === 'title' || sortBy === 'author') ? (
+                // Show alphabetical sections when sorting by title or author
+                Object.entries(groupBooksByLetter(books, sortBy as 'title' | 'author'))
+                  .sort(([a], [b]) => {
+                    if (a === '#') return 1
+                    if (b === '#') return -1
+                    return a.localeCompare(b)
+                  })
+                  .map(([letter, booksInSection]) => (
+                    <div key={letter} id={`section-${letter}`}>
+                      <div className="flex items-center gap-3 mb-3">
+                        <div className="bg-primary text-primary-foreground w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm">
+                          {letter}
+                        </div>
+                        <div className="flex-1 h-px bg-border"></div>
+                        <span className="text-sm text-muted-foreground">{booksInSection.length} book{booksInSection.length !== 1 ? 's' : ''}</span>
+                      </div>
+                      <div className="grid gap-3 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                        {booksInSection.map((book) => (
+                          <BookCard
+                            key={book.id}
+                            book={book}
+                          />
+                        ))}
+                      </div>
+                    </div>
+                  ))
+              ) : (
+                // Show regular grid for other sorting options (rating, status)
+                <div className="grid gap-3 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                  {sortBooks(books).map((book) => (
+                    <BookCard
+                      key={book.id}
+                      book={book}
+                    />
+                  ))}
+                </div>
+              )}
+            </div>
+            
+            {/* Letter Navigation Minimap */}
+            {(sortBy === 'title' || sortBy === 'author') && books.length > 0 && (
+              <div className="hidden lg:block w-12 flex-shrink-0">
+                <div className="sticky top-24 bg-background/80 backdrop-blur-sm border rounded-lg p-2">
+                  <div className="grid grid-cols-1 gap-1">
+                    {Object.keys(groupBooksByLetter(books, sortBy as 'title' | 'author'))
+                      .sort((a, b) => {
+                        if (a === '#') return 1
+                        if (b === '#') return -1
+                        return a.localeCompare(b)
+                      })
+                      .map((letter) => (
+                        <button
+                          key={letter}
+                          onClick={() => {
+                            const element = document.getElementById(`section-${letter}`)
+                            element?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+                          }}
+                          className="w-8 h-8 rounded text-xs font-medium hover:bg-primary hover:text-primary-foreground transition-colors flex items-center justify-center"
+                          title={`Jump to ${letter} section`}
+                        >
+                          {letter}
+                        </button>
+                      ))}
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         )}
       </main>
