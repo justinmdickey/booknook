@@ -1,10 +1,10 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
-import { Search, Plus } from 'lucide-react'
+import { Search, Plus, Check } from 'lucide-react'
 import Image from 'next/image'
 
 interface SearchResult {
@@ -27,6 +27,41 @@ export function BookSearch({ onAddBook }: BookSearchProps) {
   const [query, setQuery] = useState('')
   const [results, setResults] = useState<SearchResult[]>([])
   const [loading, setLoading] = useState(false)
+  const [existingBooks, setExistingBooks] = useState<{title: string, author: string, isbn?: string}[]>([])
+
+  useEffect(() => {
+    // Fetch existing books when component mounts
+    const fetchExistingBooks = async () => {
+      try {
+        const response = await fetch('/api/books')
+        const books = await response.json()
+        setExistingBooks(books.map((book: any) => ({
+          title: book.title.toLowerCase(),
+          author: book.author.toLowerCase(),
+          isbn: book.isbn
+        })))
+      } catch (error) {
+        console.error('Failed to fetch existing books:', error)
+      }
+    }
+    
+    fetchExistingBooks()
+  }, [])
+
+  const isBookAlreadyAdded = (book: SearchResult) => {
+    return existingBooks.some(existing => {
+      // Check by ISBN first (most reliable)
+      if (book.isbn && existing.isbn && book.isbn === existing.isbn) {
+        return true
+      }
+      
+      // Fallback to title and author match
+      const bookTitle = book.title.toLowerCase()
+      const bookAuthor = book.author.toLowerCase()
+      
+      return existing.title === bookTitle && existing.author === bookAuthor
+    })
+  }
 
   const handleSearch = async () => {
     if (!query.trim()) return
@@ -95,14 +130,26 @@ export function BookSearch({ onAddBook }: BookSearchProps) {
                       <p className="text-xs mt-1 line-clamp-2 text-muted-foreground">{book.description}</p>
                     )}
                   </div>
-                  <Button
-                    onClick={() => onAddBook(book)}
-                    size="sm"
-                    className="flex-shrink-0"
-                  >
-                    <Plus className="h-4 w-4 mr-1" />
-                    Add
-                  </Button>
+                  {isBookAlreadyAdded(book) ? (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="flex-shrink-0"
+                      disabled
+                    >
+                      <Check className="h-4 w-4 mr-1" />
+                      Already Added
+                    </Button>
+                  ) : (
+                    <Button
+                      onClick={() => onAddBook(book)}
+                      size="sm"
+                      className="flex-shrink-0"
+                    >
+                      <Plus className="h-4 w-4 mr-1" />
+                      Add
+                    </Button>
+                  )}
                 </div>
               </CardContent>
             </Card>
