@@ -33,12 +33,16 @@ export function verifyToken(token: string): JWTPayload | null {
 
 export async function getUserFromRequest(req: NextRequest): Promise<JWTPayload | null> {
   const token = req.cookies.get('auth-token')?.value
+  console.log('Token from cookie:', token ? 'exists' : 'missing')
   
   if (!token || typeof token !== 'string') {
+    console.log('No valid token')
     return null
   }
   
-  return verifyToken(token)
+  const payload = verifyToken(token)
+  console.log('Token payload:', payload)
+  return payload
 }
 
 export async function createDefaultUser() {

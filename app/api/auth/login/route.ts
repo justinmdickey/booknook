@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { verifyPassword, generateToken } from '@/lib/auth'
-import { setCookie } from 'cookies-next'
 
 export async function POST(request: NextRequest) {
   try {
@@ -44,13 +43,13 @@ export async function POST(request: NextRequest) {
       { status: 200 }
     )
 
-    setCookie('auth-token', token, {
-      req: request,
-      res: response,
+    // Set cookie using NextResponse
+    response.cookies.set('auth-token', token, {
       httpOnly: true,
-      secure: false, // Set to false for HTTP, true for HTTPS in production
+      secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
-      maxAge: 60 * 60 * 24 * 7 // 7 days
+      maxAge: 60 * 60 * 24 * 7, // 7 days
+      path: '/'
     })
 
     return response
