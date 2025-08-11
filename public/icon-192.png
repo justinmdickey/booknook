@@ -1,0 +1,32 @@
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 192" width="192" height="192">
+  <!-- Book shape with gradient -->
+  <defs>
+    <linearGradient id="bookGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#8B4513;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#D2691E;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="pageGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#FFF8DC;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#FAEBD7;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Book spine -->
+  <rect x="24" y="24" width="24" height="144" rx="6" fill="url(#bookGradient)"/>
+  
+  <!-- Book cover -->
+  <path d="M48 24 L156 24 Q168 24 168 36 L168 156 Q168 168 156 168 L48 168 Z" fill="url(#bookGradient)"/>
+  
+  <!-- Pages -->
+  <rect x="60" y="36" width="96" height="120" rx="3" fill="url(#pageGradient)"/>
+  
+  <!-- Page lines -->
+  <line x1="72" y1="60" x2="144" y2="60" stroke="#8B4513" stroke-width="3" opacity="0.5"/>
+  <line x1="72" y1="78" x2="144" y2="78" stroke="#8B4513" stroke-width="3" opacity="0.5"/>
+  <line x1="72" y1="96" x2="144" y2="96" stroke="#8B4513" stroke-width="3" opacity="0.5"/>
+  <line x1="72" y1="114" x2="120" y2="114" stroke="#8B4513" stroke-width="3" opacity="0.5"/>
+  
+  <!-- Bookmark ribbon -->
+  <path d="M132 24 L132 108 L120 96 L108 108 L108 24 Z" fill="#DC143C" opacity="0.9"/>
+</svg>
