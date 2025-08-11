@@ -14,19 +14,20 @@ export function ThemeToggle() {
   }, [])
 
   if (!mounted) {
-    return <Button variant="outline" size="icon" disabled />
+    return <Button variant="outline" size="sm" disabled />
   }
 
   return (
     <Button
       variant="outline"
-      size="icon"
+      size="sm"
       onClick={() => {
         if (theme === 'light') setTheme('dark')
         else if (theme === 'dark') setTheme('system')
         else setTheme('light')
       }}
       title={`Current theme: ${theme}`}
+      className="px-2 md:px-4"
     >
       {theme === 'light' && <Sun className="h-[1.2rem] w-[1.2rem]" />}
       {theme === 'dark' && <Moon className="h-[1.2rem] w-[1.2rem]" />}
