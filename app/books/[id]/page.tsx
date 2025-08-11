@@ -132,21 +132,21 @@ export default function BookDetail({ params }: { params: Promise<{ id: string }>
               <ThemeToggle />
               {!editing ? (
                 <>
-                  <Button onClick={() => setEditing(true)}>Edit</Button>
-                  <Button variant="destructive" onClick={handleDelete}>
+                  <Button size="sm" onClick={() => setEditing(true)} className="px-2 md:px-4">Edit</Button>
+                  <Button variant="destructive" size="sm" onClick={handleDelete} className="px-2 md:px-4">
                     <Trash2 className="h-4 w-4 mr-2" />
                     Delete
                   </Button>
                 </>
               ) : (
                 <>
-                  <Button variant="outline" onClick={() => {
+                  <Button variant="outline" size="sm" onClick={() => {
                     setEditing(false)
                     setFormData(book)
-                  }}>
+                  }} className="px-2 md:px-4">
                     Cancel
                   </Button>
-                  <Button onClick={handleSave}>
+                  <Button size="sm" onClick={handleSave} className="px-2 md:px-4">
                     <Save className="h-4 w-4 mr-2" />
                     Save
                   </Button>
