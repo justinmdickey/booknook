@@ -42,3 +42,9 @@ yarn-error.log*
 next-env.d.ts
 
 /lib/generated/prisma
+
+# Prisma database files
+prisma/dev.db
+prisma/dev.db-journal
+*.db
+*.db-journal

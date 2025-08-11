@@ -2,6 +2,8 @@
 
 A simple web application to catalog and manage your personal book collection with authentication and Docker support.
 
+![screenshot](assets/screenshot.png)
+
 ## Features
 
 - **User Authentication**: Secure login system with username/password
