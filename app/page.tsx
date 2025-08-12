@@ -7,7 +7,8 @@ import { BookCard } from '@/components/book-card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { ThemeToggle } from '@/components/theme-toggle'
-import { Plus, Search, BookOpen, LogOut, Filter } from 'lucide-react'
+import { TagInput } from '@/components/tag-input'
+import { Plus, Search, BookOpen, LogOut, Filter, CheckSquare, Square, Tag } from 'lucide-react'
 
 interface Book {
   id: string
@@ -37,6 +38,10 @@ export default function Home() {
   const [filterTag, setFilterTag] = useState('')
   const [showFilters, setShowFilters] = useState(false)
   const [allTags, setAllTags] = useState<string[]>([])
+  const [selectedBooks, setSelectedBooks] = useState<Set<string>>(new Set())
+  const [bulkMode, setBulkMode] = useState(false)
+  const [showBulkTagEditor, setShowBulkTagEditor] = useState(false)
+  const [bulkTags, setBulkTags] = useState<string[]>([])
 
   useEffect(() => {
     fetchBooks()
@@ -123,6 +128,58 @@ export default function Home() {
   const handleTagFilterChange = (tag: string) => {
     setFilterTag(tag)
     fetchBooks(searchQuery, filterStatus, tag)
+  }
+
+  const toggleBookSelection = (bookId: string) => {
+    const newSelected = new Set(selectedBooks)
+    if (newSelected.has(bookId)) {
+      newSelected.delete(bookId)
+    } else {
+      newSelected.add(bookId)
+    }
+    setSelectedBooks(newSelected)
+  }
+
+  const selectAllBooks = () => {
+    setSelectedBooks(new Set(books.map(book => book.id)))
+  }
+
+  const clearSelection = () => {
+    setSelectedBooks(new Set())
+  }
+
+  const toggleBulkMode = () => {
+    setBulkMode(!bulkMode)
+    if (bulkMode) {
+      clearSelection()
+      setShowBulkTagEditor(false)
+      setBulkTags([])
+    }
+  }
+
+  const handleBulkAddTags = async () => {
+    if (selectedBooks.size === 0 || bulkTags.length === 0) return
+
+    try {
+      const response = await fetch('/api/books/bulk-update', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          bookIds: Array.from(selectedBooks),
+          action: 'addTags',
+          tags: bulkTags,
+        }),
+      })
+
+      if (response.ok) {
+        // Refresh the books list
+        fetchBooks(searchQuery, filterStatus, filterTag)
+        setBulkTags([])
+        setShowBulkTagEditor(false)
+      }
+    } catch (error) {
+      console.error('Failed to bulk update tags:', error)
+    }
   }
 
   const sortBooks = (books: Book[]) => {
@@ -273,6 +330,61 @@ export default function Home() {
           </div>
         </div>
 
+        {/* Bulk Actions Toolbar */}
+        {bulkMode && (
+          <div className="bg-muted/50 rounded-lg p-3 mb-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <span className="text-sm font-medium">
+                  {selectedBooks.size} book{selectedBooks.size !== 1 ? 's' : ''} selected
+                </span>
+                <Button variant="outline" size="sm" onClick={selectAllBooks}>
+                  Select All ({books.length})
+                </Button>
+                <Button variant="outline" size="sm" onClick={clearSelection}>
+                  Clear Selection
+                </Button>
+              </div>
+              <div className="flex items-center gap-2">
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={() => setShowBulkTagEditor(!showBulkTagEditor)}
+                  disabled={selectedBooks.size === 0}
+                >
+                  <Tag className="h-4 w-4 mr-1" />
+                  Add Tags
+                </Button>
+                <Button variant="outline" size="sm" onClick={toggleBulkMode}>
+                  Exit Bulk Mode
+                </Button>
+              </div>
+            </div>
+            {showBulkTagEditor && (
+              <div className="mt-3 pt-3 border-t">
+                <div className="flex items-center gap-3">
+                  <span className="text-sm font-medium">Add tags to selected books:</span>
+                  <div className="flex-1">
+                    <TagInput
+                      tags={bulkTags}
+                      onChange={setBulkTags}
+                      suggestions={allTags}
+                      placeholder="Select tags to add..."
+                    />
+                  </div>
+                  <Button 
+                    onClick={handleBulkAddTags}
+                    disabled={bulkTags.length === 0}
+                    size="sm"
+                  >
+                    Apply Tags
+                  </Button>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
         {/* Search and Filter Controls */}
         <div className="space-y-3 mb-6">
           <div className="flex gap-2">
@@ -294,6 +406,17 @@ export default function Home() {
             >
               <Filter className="h-4 w-4" />
             </Button>
+            {!bulkMode && books.length > 0 && (
+              <Button 
+                onClick={toggleBulkMode}
+                variant="outline" 
+                size="sm"
+                className="px-2 md:px-4"
+              >
+                <CheckSquare className="h-4 w-4" />
+                <span className="hidden md:inline md:ml-2">Select</span>
+              </Button>
+            )}
           </div>
           
           {showFilters && (
@@ -438,6 +561,9 @@ export default function Home() {
                           <BookCard
                             key={book.id}
                             book={book}
+                            isSelected={selectedBooks.has(book.id)}
+                            onToggleSelect={toggleBookSelection}
+                            bulkMode={bulkMode}
                           />
                         ))}
                       </div>
@@ -450,6 +576,9 @@ export default function Home() {
                     <BookCard
                       key={book.id}
                       book={book}
+                      isSelected={selectedBooks.has(book.id)}
+                      onToggleSelect={toggleBookSelection}
+                      bulkMode={bulkMode}
                     />
                   ))}
                 </div>

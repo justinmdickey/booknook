@@ -4,7 +4,7 @@ import { useState } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { Card, CardContent } from '@/components/ui/card'
-import { Star } from 'lucide-react'
+import { Star, Check } from 'lucide-react'
 
 interface BookCardProps {
   book: {
@@ -17,9 +17,12 @@ interface BookCardProps {
     genre?: string | null
     tags?: string | null
   }
+  isSelected?: boolean
+  onToggleSelect?: (bookId: string) => void
+  bulkMode?: boolean
 }
 
-export function BookCard({ book }: BookCardProps) {
+export function BookCard({ book, isSelected = false, onToggleSelect, bulkMode = false }: BookCardProps) {
   const [imageError, setImageError] = useState(false)
 
   const getStatusColor = (status: string) => {
@@ -61,10 +64,38 @@ export function BookCard({ book }: BookCardProps) {
     }
   }
 
+  const handleCardClick = (e: React.MouseEvent) => {
+    if (bulkMode && onToggleSelect) {
+      e.preventDefault()
+      onToggleSelect(book.id)
+    }
+  }
+
   return (
-    <Link href={`/books/${book.id}`}>
-      <Card className="overflow-hidden hover:shadow-lg transition-all hover:scale-[1.02] cursor-pointer h-32 md:h-36">
-        <CardContent className="p-3 md:p-4 h-full">
+    <div className="relative">
+      {bulkMode && (
+        <div className="absolute top-2 left-2 z-10">
+          <button
+            onClick={(e) => {
+              e.preventDefault()
+              e.stopPropagation()
+              onToggleSelect?.(book.id)
+            }}
+            className={`w-6 h-6 rounded border-2 flex items-center justify-center transition-colors ${
+              isSelected 
+                ? 'bg-primary border-primary text-primary-foreground' 
+                : 'bg-background border-border hover:border-primary'
+            }`}
+          >
+            {isSelected && <Check className="h-4 w-4" />}
+          </button>
+        </div>
+      )}
+      <Link href={bulkMode ? '#' : `/books/${book.id}`} onClick={handleCardClick}>
+        <Card className={`overflow-hidden hover:shadow-lg transition-all hover:scale-[1.02] cursor-pointer h-32 md:h-36 ${
+          isSelected ? 'ring-2 ring-primary' : ''
+        }`}>
+          <CardContent className="p-3 md:p-4 h-full">
         <div className="flex gap-2 md:gap-3 h-full">
           <div className="w-12 h-18 md:w-16 md:h-24 relative bg-gray-100 dark:bg-gray-800 rounded flex-shrink-0">
             {book.coverUrl && !imageError ? (
@@ -130,5 +161,6 @@ export function BookCard({ book }: BookCardProps) {
         </CardContent>
       </Card>
     </Link>
+    </div>
   )
 }
