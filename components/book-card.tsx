@@ -15,6 +15,7 @@ interface BookCardProps {
     status: string
     rating?: number | null
     genre?: string | null
+    tags?: string | null
   }
 }
 
@@ -29,6 +30,34 @@ export function BookCard({ book }: BookCardProps) {
         return 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200'
       default:
         return 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200'
+    }
+  }
+
+  const getTagColor = (tag: string) => {
+    const colors = [
+      'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200',
+      'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200',
+      'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200',
+      'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200',
+      'bg-pink-100 text-pink-800 dark:bg-pink-900 dark:text-pink-200',
+      'bg-indigo-100 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-200',
+      'bg-teal-100 text-teal-800 dark:bg-teal-900 dark:text-teal-200',
+      'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200',
+    ]
+    
+    let hash = 0
+    for (let i = 0; i < tag.length; i++) {
+      hash = tag.charCodeAt(i) + ((hash << 5) - hash)
+    }
+    return colors[Math.abs(hash) % colors.length]
+  }
+
+  const parseTags = (tagsString: string | null | undefined): string[] => {
+    if (!tagsString) return []
+    try {
+      return JSON.parse(tagsString)
+    } catch {
+      return []
     }
   }
 
@@ -61,6 +90,23 @@ export function BookCard({ book }: BookCardProps) {
               <p className="text-xs md:text-sm text-muted-foreground line-clamp-1 mt-0.5">{book.author}</p>
               {book.genre && (
                 <p className="text-xs text-muted-foreground line-clamp-1 hidden md:block mt-0.5">{book.genre}</p>
+              )}
+              {parseTags(book.tags).length > 0 && (
+                <div className="flex flex-wrap gap-1 mt-1">
+                  {parseTags(book.tags).slice(0, 2).map((tag) => (
+                    <span
+                      key={tag}
+                      className={`text-xs px-1.5 py-0.5 rounded-full font-medium ${getTagColor(tag)}`}
+                    >
+                      {tag}
+                    </span>
+                  ))}
+                  {parseTags(book.tags).length > 2 && (
+                    <span className="text-xs text-muted-foreground">
+                      +{parseTags(book.tags).length - 2}
+                    </span>
+                  )}
+                </div>
               )}
             </div>
             <div className="flex items-center gap-1 md:gap-2 mt-1">

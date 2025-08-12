@@ -16,6 +16,7 @@ export async function GET(request: NextRequest) {
     const search = searchParams.get('search')
     const status = searchParams.get('status')
     const genre = searchParams.get('genre')
+    const tag = searchParams.get('tag')
     
     let books
     
@@ -43,6 +44,17 @@ export async function GET(request: NextRequest) {
       if (genre) {
         books = books.filter((book: any) => book.genre === genre)
       }
+      if (tag) {
+        books = books.filter((book: any) => {
+          if (!book.tags) return false
+          try {
+            const bookTags = JSON.parse(book.tags)
+            return bookTags.includes(tag)
+          } catch {
+            return false
+          }
+        })
+      }
     } else {
       const where: any = {
         userId: user.userId
@@ -63,6 +75,19 @@ export async function GET(request: NextRequest) {
           { title: 'asc' }
         ],
       })
+      
+      // Apply tag filter if specified
+      if (tag) {
+        books = books.filter((book: any) => {
+          if (!book.tags) return false
+          try {
+            const bookTags = JSON.parse(book.tags)
+            return bookTags.includes(tag)
+          } catch {
+            return false
+          }
+        })
+      }
     }
     
     return NextResponse.json(books)
@@ -95,7 +120,7 @@ export async function POST(request: NextRequest) {
         status: body.status || 'unread',
         rating: body.rating || undefined,
         personalNotes: body.personalNotes || undefined,
-        tags: body.tags ? JSON.stringify(body.tags) : undefined,
+        tags: body.tags ? (typeof body.tags === 'string' ? body.tags : JSON.stringify(body.tags)) : undefined,
         userId: user.userId,
       },
     })

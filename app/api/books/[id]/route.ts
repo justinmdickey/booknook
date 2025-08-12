@@ -62,7 +62,7 @@ export async function PUT(
         status: body.status,
         rating: body.rating || undefined,
         personalNotes: body.personalNotes || undefined,
-        tags: body.tags ? JSON.stringify(body.tags) : undefined,
+        tags: body.tags ? (typeof body.tags === 'string' ? body.tags : JSON.stringify(body.tags)) : undefined,
       },
     })
     

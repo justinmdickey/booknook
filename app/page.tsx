@@ -17,6 +17,7 @@ interface Book {
   status: string
   rating?: number | null
   genre?: string | null
+  tags?: string | null
 }
 
 export default function Home() {
@@ -33,19 +34,37 @@ export default function Home() {
   })
   const [sortBy, setSortBy] = useState('title')
   const [filterStatus, setFilterStatus] = useState('')
+  const [filterTag, setFilterTag] = useState('')
   const [showFilters, setShowFilters] = useState(false)
+  const [allTags, setAllTags] = useState<string[]>([])
 
   useEffect(() => {
     fetchBooks()
   }, [])
 
-  const fetchBooks = async (search?: string, status?: string) => {
+  const extractAllTags = (books: Book[]) => {
+    const tagSet = new Set<string>()
+    books.forEach(book => {
+      if (book.tags) {
+        try {
+          const tags = JSON.parse(book.tags)
+          tags.forEach((tag: string) => tagSet.add(tag))
+        } catch (e) {
+          // Ignore invalid JSON
+        }
+      }
+    })
+    setAllTags(Array.from(tagSet).sort())
+  }
+
+  const fetchBooks = async (search?: string, status?: string, tag?: string) => {
     setLoading(true)
     setError(null)
     try {
       const params = new URLSearchParams()
       if (search) params.append('search', search)
       if (status) params.append('status', status)
+      if (tag) params.append('tag', tag)
       
       const url = `/api/books${params.toString() ? '?' + params.toString() : ''}`
       console.log('Fetching from URL:', url)
@@ -72,6 +91,7 @@ export default function Home() {
       // Ensure data is an array
       const booksArray = Array.isArray(data) ? data : []
       setBooks(booksArray)
+      extractAllTags(booksArray)
       
       // Calculate stats
       const stats = {
@@ -92,12 +112,17 @@ export default function Home() {
   }
 
   const handleSearch = () => {
-    fetchBooks(searchQuery, filterStatus)
+    fetchBooks(searchQuery, filterStatus, filterTag)
   }
 
   const handleFilterChange = (status: string) => {
     setFilterStatus(status)
-    fetchBooks(searchQuery, status)
+    fetchBooks(searchQuery, status, filterTag)
+  }
+
+  const handleTagFilterChange = (tag: string) => {
+    setFilterTag(tag)
+    fetchBooks(searchQuery, filterStatus, tag)
   }
 
   const sortBooks = (books: Book[]) => {
@@ -303,6 +328,31 @@ export default function Home() {
                 >
                   Read
                 </Button>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-medium">Tag:</span>
+                <Button
+                  variant={filterTag === '' ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => handleTagFilterChange('')}
+                >
+                  All
+                </Button>
+                {allTags.slice(0, 4).map((tag) => (
+                  <Button
+                    key={tag}
+                    variant={filterTag === tag ? 'default' : 'outline'}
+                    size="sm"
+                    onClick={() => handleTagFilterChange(tag)}
+                  >
+                    {tag}
+                  </Button>
+                ))}
+                {allTags.length > 4 && (
+                  <span className="text-xs text-muted-foreground">
+                    +{allTags.length - 4} more
+                  </span>
+                )}
               </div>
               <div className="flex items-center gap-2">
                 <span className="text-sm font-medium">Sort:</span>

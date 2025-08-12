@@ -1,9 +1,10 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { BookSearch } from '@/components/book-search'
+import { TagInput } from '@/components/tag-input'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { ThemeToggle } from '@/components/theme-toggle'
@@ -13,6 +14,7 @@ import { ArrowLeft, Save } from 'lucide-react'
 export default function AddBook() {
   const router = useRouter()
   const [manualEntry, setManualEntry] = useState(false)
+  const [allTags, setAllTags] = useState<string[]>([])
   const [formData, setFormData] = useState({
     title: '',
     author: '',
@@ -23,7 +25,35 @@ export default function AddBook() {
     description: '',
     pageCount: '',
     coverUrl: '',
+    tags: [] as string[],
   })
+
+  useEffect(() => {
+    fetchAllTags()
+  }, [])
+
+  const fetchAllTags = async () => {
+    try {
+      const response = await fetch('/api/books')
+      const books = await response.json()
+      const tagSet = new Set<string>()
+      
+      books.forEach((book: any) => {
+        if (book.tags) {
+          try {
+            const tags = JSON.parse(book.tags)
+            tags.forEach((tag: string) => tagSet.add(tag))
+          } catch (e) {
+            // Ignore invalid JSON
+          }
+        }
+      })
+      
+      setAllTags(Array.from(tagSet))
+    } catch (error) {
+      console.error('Failed to fetch tags:', error)
+    }
+  }
 
   const handleAddFromSearch = async (book: any) => {
     try {
@@ -55,6 +85,7 @@ export default function AddBook() {
           ...formData,
           publicationYear: formData.publicationYear ? parseInt(formData.publicationYear) : undefined,
           pageCount: formData.pageCount ? parseInt(formData.pageCount) : undefined,
+          tags: JSON.stringify(formData.tags),
           status: 'unread',
         }),
       })
@@ -175,7 +206,16 @@ export default function AddBook() {
                       />
                     </div>
                   </div>
-                  <div>
+                  <div className="md:col-span-2">
+                    <label className="text-sm font-medium">Tags</label>
+                    <TagInput
+                      tags={formData.tags}
+                      onChange={(tags) => setFormData({ ...formData, tags })}
+                      suggestions={allTags}
+                      placeholder="Add tags like 'Kids Books', 'Favorites', etc."
+                    />
+                  </div>
+                  <div className="md:col-span-2">
                     <label className="text-sm font-medium">Description</label>
                     <textarea
                       className="w-full min-h-[100px] rounded-md border border-input bg-background px-3 py-2 text-sm"

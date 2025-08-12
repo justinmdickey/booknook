@@ -7,7 +7,8 @@ import Image from 'next/image'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { ThemeToggle } from '@/components/theme-toggle'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { TagInput } from '@/components/tag-input'
+import { Card, CardContent } from '@/components/ui/card'
 import { ArrowLeft, Save, Star, Trash2 } from 'lucide-react'
 
 interface BookDetails {
@@ -33,14 +34,39 @@ export default function BookDetail({ params }: { params: Promise<{ id: string }>
   const [loading, setLoading] = useState(true)
   const [editing, setEditing] = useState(false)
   const [formData, setFormData] = useState<BookDetails | null>(null)
+  const [allTags, setAllTags] = useState<string[]>([])
 
   useEffect(() => {
     const loadBook = async () => {
       const { id } = await params
       fetchBook(id)
+      fetchAllTags()
     }
     loadBook()
   }, [])
+
+  const fetchAllTags = async () => {
+    try {
+      const response = await fetch('/api/books')
+      const books = await response.json()
+      const tagSet = new Set<string>()
+      
+      books.forEach((book: any) => {
+        if (book.tags) {
+          try {
+            const tags = JSON.parse(book.tags)
+            tags.forEach((tag: string) => tagSet.add(tag))
+          } catch (e) {
+            // Ignore invalid JSON
+          }
+        }
+      })
+      
+      setAllTags(Array.from(tagSet))
+    } catch (error) {
+      console.error('Failed to fetch tags:', error)
+    }
+  }
 
   const fetchBook = async (id: string) => {
     try {
@@ -97,6 +123,40 @@ export default function BookDetail({ params }: { params: Promise<{ id: string }>
     if (formData) {
       setFormData({ ...formData, rating: newRating })
     }
+  }
+
+  const parseTags = (tagsString: string | null | undefined): string[] => {
+    if (!tagsString) return []
+    try {
+      return JSON.parse(tagsString)
+    } catch {
+      return []
+    }
+  }
+
+  const handleTagsChange = (newTags: string[]) => {
+    if (formData) {
+      setFormData({ ...formData, tags: JSON.stringify(newTags) })
+    }
+  }
+
+  const getTagColor = (tag: string) => {
+    const colors = [
+      'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200',
+      'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200',
+      'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200',
+      'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200',
+      'bg-pink-100 text-pink-800 dark:bg-pink-900 dark:text-pink-200',
+      'bg-indigo-100 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-200',
+      'bg-teal-100 text-teal-800 dark:bg-teal-900 dark:text-teal-200',
+      'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200',
+    ]
+    
+    let hash = 0
+    for (let i = 0; i < tag.length; i++) {
+      hash = tag.charCodeAt(i) + ((hash << 5) - hash)
+    }
+    return colors[Math.abs(hash) % colors.length]
   }
 
   if (loading) {
@@ -230,6 +290,15 @@ export default function BookDetail({ params }: { params: Promise<{ id: string }>
                       </div>
                     </div>
                     <div>
+                      <label className="text-sm font-medium">Tags</label>
+                      <TagInput
+                        tags={parseTags(formData.tags)}
+                        onChange={handleTagsChange}
+                        suggestions={allTags}
+                        placeholder="Add tags like 'Kids Books', 'Favorites', etc."
+                      />
+                    </div>
+                    <div>
                       <label className="text-sm font-medium">Personal Notes</label>
                       <textarea
                         className="w-full min-h-[100px] rounded-md border border-input bg-background px-3 py-2 text-sm"
@@ -301,6 +370,22 @@ export default function BookDetail({ params }: { params: Promise<{ id: string }>
                       <div>
                         <h3 className="font-semibold mb-2">Description</h3>
                         <p className="text-sm text-muted-foreground">{book.description}</p>
+                      </div>
+                    )}
+                    
+                    {parseTags(book.tags).length > 0 && (
+                      <div>
+                        <h3 className="font-semibold mb-2">Tags</h3>
+                        <div className="flex flex-wrap gap-2">
+                          {parseTags(book.tags).map((tag) => (
+                            <span
+                              key={tag}
+                              className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${getTagColor(tag)}`}
+                            >
+                              {tag}
+                            </span>
+                          ))}
+                        </div>
                       </div>
                     )}
                     
