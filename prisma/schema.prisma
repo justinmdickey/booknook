@@ -11,11 +11,12 @@ datasource db {
 }
 
 model User {
-  id           String   @id @default(cuid())
-  username     String   @unique
+  id           String        @id @default(cuid())
+  username     String        @unique
   passwordHash String
-  createdAt    DateTime @default(now())
+  createdAt    DateTime      @default(now())
   books        Book[]
+  wishlist     WishlistItem[]
 }
 
 model Book {
@@ -41,5 +42,30 @@ model Book {
   @@index([title])
   @@index([author])
   @@index([status])
+  @@index([userId])
+}
+
+model WishlistItem {
+  id              String   @id @default(cuid())
+  isbn            String?
+  title           String
+  author          String
+  publisher       String?
+  publicationYear Int?
+  genre           String?
+  description     String?
+  coverUrl        String?
+  pageCount       Int?
+  tags            String?  // JSON array stored as string
+  priority        String   @default("medium") // low, medium, high
+  notes           String?  // Why you want this book
+  dateAdded       DateTime @default(now())
+  dateModified    DateTime @updatedAt
+  userId          String
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@index([title])
+  @@index([author])
+  @@index([priority])
   @@index([userId])
 }

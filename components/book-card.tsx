@@ -92,7 +92,7 @@ export function BookCard({ book, isSelected = false, onToggleSelect, bulkMode = 
         </div>
       )}
       <Link href={bulkMode ? '#' : `/books/${book.id}`} onClick={handleCardClick}>
-        <Card className={`overflow-hidden hover:shadow-lg transition-all hover:scale-[1.02] cursor-pointer h-32 md:h-36 ${
+        <Card className={`overflow-hidden hover:shadow-lg transition-all hover:scale-[1.02] cursor-pointer h-32 md:h-36 border-l-4 border-l-blue-500 ${
           isSelected ? 'ring-2 ring-primary' : ''
         }`}>
           <CardContent className="p-3 md:p-4 h-full">

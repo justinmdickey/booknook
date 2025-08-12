@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
-import { Search, Plus, Check } from 'lucide-react'
+import { Search, Plus, Check, Heart } from 'lucide-react'
 import Image from 'next/image'
 
 interface SearchResult {
@@ -21,9 +21,10 @@ interface SearchResult {
 
 interface BookSearchProps {
   onAddBook: (book: SearchResult) => void
+  onAddToWishlist?: (book: SearchResult) => void
 }
 
-export function BookSearch({ onAddBook }: BookSearchProps) {
+export function BookSearch({ onAddBook, onAddToWishlist }: BookSearchProps) {
   const [query, setQuery] = useState('')
   const [results, setResults] = useState<SearchResult[]>([])
   const [loading, setLoading] = useState(false)
@@ -130,26 +131,39 @@ export function BookSearch({ onAddBook }: BookSearchProps) {
                       <p className="text-xs mt-1 line-clamp-2 text-muted-foreground">{book.description}</p>
                     )}
                   </div>
-                  {isBookAlreadyAdded(book) ? (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="flex-shrink-0"
-                      disabled
-                    >
-                      <Check className="h-4 w-4 mr-1" />
-                      Already Added
-                    </Button>
-                  ) : (
-                    <Button
-                      onClick={() => onAddBook(book)}
-                      size="sm"
-                      className="flex-shrink-0"
-                    >
-                      <Plus className="h-4 w-4 mr-1" />
-                      Add
-                    </Button>
-                  )}
+                  <div className="flex flex-col gap-1">
+                    {isBookAlreadyAdded(book) ? (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="flex-shrink-0"
+                        disabled
+                      >
+                        <Check className="h-4 w-4 mr-1" />
+                        Already Added
+                      </Button>
+                    ) : (
+                      <Button
+                        onClick={() => onAddBook(book)}
+                        size="sm"
+                        className="flex-shrink-0"
+                      >
+                        <Plus className="h-4 w-4 mr-1" />
+                        Add to Library
+                      </Button>
+                    )}
+                    {onAddToWishlist && (
+                      <Button
+                        onClick={() => onAddToWishlist(book)}
+                        variant="outline"
+                        size="sm"
+                        className="flex-shrink-0"
+                      >
+                        <Heart className="h-4 w-4 mr-1" />
+                        Add to Wishlist
+                      </Button>
+                    )}
+                  </div>
                 </div>
               </CardContent>
             </Card>

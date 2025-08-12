@@ -74,6 +74,25 @@ export default function AddBook() {
     }
   }
 
+  const handleAddToWishlist = async (book: any) => {
+    try {
+      const response = await fetch('/api/wishlist', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ...book,
+          priority: 'medium',
+        }),
+      })
+      
+      if (response.ok) {
+        router.push('/wishlist')
+      }
+    } catch (error) {
+      console.error('Failed to add to wishlist:', error)
+    }
+  }
+
   const handleManualSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     
@@ -123,7 +142,7 @@ export default function AddBook() {
               <CardTitle>Search for a Book</CardTitle>
             </CardHeader>
             <CardContent>
-              <BookSearch onAddBook={handleAddFromSearch} />
+              <BookSearch onAddBook={handleAddFromSearch} onAddToWishlist={handleAddToWishlist} />
             </CardContent>
           </Card>
 

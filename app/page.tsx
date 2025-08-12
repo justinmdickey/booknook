@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { ThemeToggle } from '@/components/theme-toggle'
 import { TagInput } from '@/components/tag-input'
-import { Plus, Search, BookOpen, LogOut, Filter, CheckSquare, Square, Tag } from 'lucide-react'
+import { Plus, Search, BookOpen, LogOut, Filter, CheckSquare, Square, Tag, Heart } from 'lucide-react'
 
 interface Book {
   id: string
@@ -284,20 +284,19 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-background">
-      <header className="border-b">
+      <header className="border-b bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950/20 dark:to-indigo-950/20">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <BookOpen className="h-6 w-6 md:h-8 md:w-8 text-primary" />
+            <Link href="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
+              <BookOpen className="h-6 w-6 md:h-8 md:w-8 text-blue-600" />
               <h1 className="text-xl md:text-3xl font-bold">The Book Nook</h1>
-            </div>
+            </Link>
             <div className="flex gap-1 md:gap-2">
               <ThemeToggle />
-              <Link href="/add">
-                <Button size="sm" className="px-2 md:px-4">
-                  <Plus className="h-4 w-4 md:mr-2" />
-                  <span className="hidden md:inline">Add Book</span>
-                  <span className="md:hidden">New</span>
+              <Link href="/wishlist">
+                <Button size="sm" variant="outline" className="px-2 md:px-4">
+                  <Heart className="h-4 w-4 md:mr-2" />
+                  <span className="hidden md:inline">Wishlist</span>
                 </Button>
               </Link>
               <Button variant="outline" size="sm" onClick={handleLogout} className="px-2 md:px-4">
@@ -616,6 +615,16 @@ export default function Home() {
           </div>
         )}
       </main>
+      
+      {/* Floating Action Button */}
+      <Link href="/add">
+        <Button 
+          size="lg"
+          className="fixed bottom-6 right-6 h-14 w-14 rounded-full shadow-lg hover:shadow-xl transition-all hover:scale-110 z-50 bg-blue-500 hover:bg-blue-600 border-0 p-0 flex items-center justify-center"
+        >
+          <Plus className="h-6 w-6 text-black" />
+        </Button>
+      </Link>
     </div>
   )
 }

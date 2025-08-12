@@ -9,9 +9,9 @@ import { Input } from '@/components/ui/input'
 import { ThemeToggle } from '@/components/theme-toggle'
 import { TagInput } from '@/components/tag-input'
 import { Card, CardContent } from '@/components/ui/card'
-import { ArrowLeft, Save, Star, Trash2, BookOpen } from 'lucide-react'
+import { ArrowLeft, Save, Trash2, ArrowRight, Heart } from 'lucide-react'
 
-interface BookDetails {
+interface WishlistItemDetails {
   id: string
   title: string
   author: string
@@ -22,39 +22,38 @@ interface BookDetails {
   description?: string | null
   coverUrl?: string | null
   pageCount?: number | null
-  status: string
-  rating?: number | null
-  personalNotes?: string | null
+  priority: string
+  notes?: string | null
   tags?: string | null
 }
 
-export default function BookDetail({ params }: { params: Promise<{ id: string }> }) {
+export default function WishlistItemDetail({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter()
-  const [book, setBook] = useState<BookDetails | null>(null)
+  const [item, setItem] = useState<WishlistItemDetails | null>(null)
   const [loading, setLoading] = useState(true)
   const [editing, setEditing] = useState(false)
-  const [formData, setFormData] = useState<BookDetails | null>(null)
+  const [formData, setFormData] = useState<WishlistItemDetails | null>(null)
   const [allTags, setAllTags] = useState<string[]>([])
 
   useEffect(() => {
-    const loadBook = async () => {
+    const loadItem = async () => {
       const { id } = await params
-      fetchBook(id)
+      fetchItem(id)
       fetchAllTags()
     }
-    loadBook()
+    loadItem()
   }, [])
 
   const fetchAllTags = async () => {
     try {
-      const response = await fetch('/api/books')
-      const books = await response.json()
+      const response = await fetch('/api/wishlist')
+      const items = await response.json()
       const tagSet = new Set<string>()
       
-      books.forEach((book: any) => {
-        if (book.tags) {
+      items.forEach((item: any) => {
+        if (item.tags) {
           try {
-            const tags = JSON.parse(book.tags)
+            const tags = JSON.parse(item.tags)
             tags.forEach((tag: string) => tagSet.add(tag))
           } catch (e) {
             // Ignore invalid JSON
@@ -68,14 +67,14 @@ export default function BookDetail({ params }: { params: Promise<{ id: string }>
     }
   }
 
-  const fetchBook = async (id: string) => {
+  const fetchItem = async (id: string) => {
     try {
-      const response = await fetch(`/api/books/${id}`)
+      const response = await fetch(`/api/wishlist/${id}`)
       const data = await response.json()
-      setBook(data)
+      setItem(data)
       setFormData(data)
     } catch (error) {
-      console.error('Failed to fetch book:', error)
+      console.error('Failed to fetch wishlist item:', error)
     } finally {
       setLoading(false)
     }
@@ -86,42 +85,63 @@ export default function BookDetail({ params }: { params: Promise<{ id: string }>
     const { id } = await params
 
     try {
-      const response = await fetch(`/api/books/${id}`, {
+      const response = await fetch(`/api/wishlist/${id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData),
       })
       
       if (response.ok) {
-        const updatedBook = await response.json()
-        setBook(updatedBook)
+        const updatedItem = await response.json()
+        setItem(updatedItem)
         setEditing(false)
       }
     } catch (error) {
-      console.error('Failed to update book:', error)
+      console.error('Failed to update wishlist item:', error)
     }
   }
 
   const handleDelete = async () => {
-    if (!confirm('Are you sure you want to delete this book?')) return
+    if (!confirm('Are you sure you want to remove this item from your wishlist?')) return
     const { id } = await params
 
     try {
-      const response = await fetch(`/api/books/${id}`, {
+      const response = await fetch(`/api/wishlist/${id}`, {
         method: 'DELETE',
       })
       
       if (response.ok) {
-        router.push('/')
+        router.push('/wishlist')
       }
     } catch (error) {
-      console.error('Failed to delete book:', error)
+      console.error('Failed to delete wishlist item:', error)
     }
   }
 
-  const handleRatingChange = (newRating: number) => {
-    if (formData) {
-      setFormData({ ...formData, rating: newRating })
+  const moveToLibrary = async () => {
+    if (!item) return
+    
+    try {
+      // Add to library
+      const response = await fetch('/api/books', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ...item,
+          status: 'unread',
+        }),
+      })
+      
+      if (response.ok) {
+        // Remove from wishlist
+        await fetch(`/api/wishlist/${item.id}`, {
+          method: 'DELETE',
+        })
+        
+        router.push('/')
+      }
+    } catch (error) {
+      console.error('Failed to move to library:', error)
     }
   }
 
@@ -159,36 +179,49 @@ export default function BookDetail({ params }: { params: Promise<{ id: string }>
     return colors[Math.abs(hash) % colors.length]
   }
 
+  const getPriorityColor = (priority: string) => {
+    switch (priority) {
+      case 'high':
+        return 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
+      case 'medium':
+        return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200'
+      case 'low':
+        return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
+      default:
+        return 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200'
+    }
+  }
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <p className="text-muted-foreground">Loading book details...</p>
+        <p className="text-muted-foreground">Loading wishlist item...</p>
       </div>
     )
   }
 
-  if (!book || !formData) {
+  if (!item || !formData) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <p className="text-muted-foreground">Book not found</p>
+        <p className="text-muted-foreground">Wishlist item not found</p>
       </div>
     )
   }
 
   return (
     <div className="min-h-screen bg-background">
-      <header className="border-b bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950/20 dark:to-indigo-950/20">
+      <header className="border-b bg-gradient-to-r from-pink-50 to-purple-50 dark:from-pink-950/20 dark:to-purple-950/20">
         <div className="container mx-auto px-4 py-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
-              <Link href="/">
+              <Link href="/wishlist">
                 <Button variant="ghost" size="icon">
                   <ArrowLeft className="h-5 w-5" />
                 </Button>
               </Link>
               <div className="flex items-center gap-2">
-                <BookOpen className="h-6 w-6 text-blue-600" />
-                <h1 className="text-2xl font-bold">Book Details</h1>
+                <Heart className="h-6 w-6 text-pink-600" />
+                <h1 className="text-2xl font-bold">Wishlist Item</h1>
               </div>
             </div>
             <div className="flex gap-2">
@@ -196,6 +229,10 @@ export default function BookDetail({ params }: { params: Promise<{ id: string }>
               {!editing ? (
                 <>
                   <Button size="sm" onClick={() => setEditing(true)} className="px-2 md:px-4">Edit</Button>
+                  <Button size="sm" onClick={moveToLibrary} className="px-2 md:px-4">
+                    <ArrowRight className="h-4 w-4 mr-2" />
+                    Move to Library
+                  </Button>
                   <Button variant="destructive" size="sm" onClick={handleDelete} className="px-2 md:px-4">
                     <Trash2 className="h-4 w-4 mr-2" />
                     Delete
@@ -205,7 +242,7 @@ export default function BookDetail({ params }: { params: Promise<{ id: string }>
                 <>
                   <Button variant="outline" size="sm" onClick={() => {
                     setEditing(false)
-                    setFormData(book)
+                    setFormData(item)
                   }} className="px-2 md:px-4">
                     Cancel
                   </Button>
@@ -225,11 +262,11 @@ export default function BookDetail({ params }: { params: Promise<{ id: string }>
           <CardContent className="p-6">
             <div className="grid gap-6 md:grid-cols-[150px_1fr]">
               <div>
-                {book.coverUrl ? (
+                {item.coverUrl ? (
                   <div className="relative aspect-[2/3] bg-gray-100 dark:bg-gray-800 rounded overflow-hidden">
                     <Image
-                      src={book.coverUrl}
-                      alt={book.title}
+                      src={item.coverUrl}
+                      alt={item.title}
                       fill
                       className="object-cover"
                       sizes="150px"
@@ -260,37 +297,16 @@ export default function BookDetail({ params }: { params: Promise<{ id: string }>
                       />
                     </div>
                     <div>
-                      <label className="text-sm font-medium">Status</label>
+                      <label className="text-sm font-medium">Priority</label>
                       <select
                         className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                        value={formData.status}
-                        onChange={(e) => setFormData({ ...formData, status: e.target.value })}
+                        value={formData.priority}
+                        onChange={(e) => setFormData({ ...formData, priority: e.target.value })}
                       >
-                        <option value="unread">Unread</option>
-                        <option value="reading">Currently Reading</option>
-                        <option value="read">Read</option>
+                        <option value="low">Low</option>
+                        <option value="medium">Medium</option>
+                        <option value="high">High</option>
                       </select>
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium">Rating</label>
-                      <div className="flex gap-1 mt-1">
-                        {[1, 2, 3, 4, 5].map((star) => (
-                          <button
-                            key={star}
-                            type="button"
-                            onClick={() => handleRatingChange(star)}
-                            className="focus:outline-none"
-                          >
-                            <Star
-                              className={`h-6 w-6 ${
-                                formData.rating && star <= formData.rating
-                                  ? 'fill-yellow-400 text-yellow-400'
-                                  : 'text-gray-300'
-                              }`}
-                            />
-                          </button>
-                        ))}
-                      </div>
                     </div>
                     <div>
                       <label className="text-sm font-medium">Tags</label>
@@ -298,89 +314,72 @@ export default function BookDetail({ params }: { params: Promise<{ id: string }>
                         tags={parseTags(formData.tags)}
                         onChange={handleTagsChange}
                         suggestions={allTags}
-                        placeholder="Add tags like 'Kids Books', 'Favorites', etc."
+                        placeholder="Add tags like 'Must Read', 'Gift Ideas', etc."
                       />
                     </div>
                     <div>
-                      <label className="text-sm font-medium">Personal Notes</label>
+                      <label className="text-sm font-medium">Notes</label>
                       <textarea
                         className="w-full min-h-[100px] rounded-md border border-input bg-background px-3 py-2 text-sm"
-                        value={formData.personalNotes || ''}
-                        onChange={(e) => setFormData({ ...formData, personalNotes: e.target.value })}
+                        value={formData.notes || ''}
+                        onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+                        placeholder="Why do you want this book?"
                       />
                     </div>
                   </>
                 ) : (
                   <>
                     <div>
-                      <h2 className="text-3xl font-bold">{book.title}</h2>
-                      <p className="text-xl text-muted-foreground mt-1">{book.author}</p>
+                      <h2 className="text-3xl font-bold">{item.title}</h2>
+                      <p className="text-xl text-muted-foreground mt-1">{item.author}</p>
                     </div>
                     
                     <div className="flex items-center gap-4">
-                      <span className={`px-3 py-1 rounded-full text-sm ${
-                        book.status === 'read' ? 'bg-green-100 text-green-800' :
-                        book.status === 'reading' ? 'bg-blue-100 text-blue-800' :
-                        'bg-gray-100 text-gray-800'
-                      }`}>
-                        {book.status === 'read' ? 'Read' :
-                         book.status === 'reading' ? 'Currently Reading' : 'Unread'}
+                      <span className={`px-3 py-1 rounded-full text-sm font-medium ${getPriorityColor(item.priority)}`}>
+                        {item.priority.charAt(0).toUpperCase() + item.priority.slice(1)} Priority
                       </span>
-                      
-                      {book.rating && (
-                        <div className="flex gap-1">
-                          {[...Array(5)].map((_, i) => (
-                            <Star
-                              key={i}
-                              className={`h-5 w-5 ${
-                                book.rating && i < book.rating ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300'
-                              }`}
-                            />
-                          ))}
-                        </div>
-                      )}
                     </div>
                     
                     <div className="grid gap-2 text-sm">
-                      {book.genre && (
+                      {item.genre && (
                         <div>
-                          <span className="font-medium">Genre:</span> {book.genre}
+                          <span className="font-medium">Genre:</span> {item.genre}
                         </div>
                       )}
-                      {book.publisher && (
+                      {item.publisher && (
                         <div>
-                          <span className="font-medium">Publisher:</span> {book.publisher}
+                          <span className="font-medium">Publisher:</span> {item.publisher}
                         </div>
                       )}
-                      {book.publicationYear && (
+                      {item.publicationYear && (
                         <div>
-                          <span className="font-medium">Year:</span> {book.publicationYear}
+                          <span className="font-medium">Year:</span> {item.publicationYear}
                         </div>
                       )}
-                      {book.isbn && (
+                      {item.isbn && (
                         <div>
-                          <span className="font-medium">ISBN:</span> {book.isbn}
+                          <span className="font-medium">ISBN:</span> {item.isbn}
                         </div>
                       )}
-                      {book.pageCount && (
+                      {item.pageCount && (
                         <div>
-                          <span className="font-medium">Pages:</span> {book.pageCount}
+                          <span className="font-medium">Pages:</span> {item.pageCount}
                         </div>
                       )}
                     </div>
                     
-                    {book.description && (
+                    {item.description && (
                       <div>
                         <h3 className="font-semibold mb-2">Description</h3>
-                        <p className="text-sm text-muted-foreground">{book.description}</p>
+                        <p className="text-sm text-muted-foreground">{item.description}</p>
                       </div>
                     )}
                     
-                    {parseTags(book.tags).length > 0 && (
+                    {parseTags(item.tags).length > 0 && (
                       <div>
                         <h3 className="font-semibold mb-2">Tags</h3>
                         <div className="flex flex-wrap gap-2">
-                          {parseTags(book.tags).map((tag) => (
+                          {parseTags(item.tags).map((tag) => (
                             <span
                               key={tag}
                               className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${getTagColor(tag)}`}
@@ -392,10 +391,10 @@ export default function BookDetail({ params }: { params: Promise<{ id: string }>
                       </div>
                     )}
                     
-                    {book.personalNotes && (
+                    {item.notes && (
                       <div>
-                        <h3 className="font-semibold mb-2">Personal Notes</h3>
-                        <p className="text-sm">{book.personalNotes}</p>
+                        <h3 className="font-semibold mb-2">Notes</h3>
+                        <p className="text-sm">{item.notes}</p>
                       </div>
                     )}
                   </>
