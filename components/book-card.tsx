@@ -25,17 +25,6 @@ interface BookCardProps {
 export function BookCard({ book, isSelected = false, onToggleSelect, bulkMode = false }: BookCardProps) {
   const [imageError, setImageError] = useState(false)
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'read':
-        return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
-      case 'reading':
-        return 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200'
-      default:
-        return 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200'
-    }
-  }
-
   const getTagColor = (tag: string) => {
     const colors = [
       'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200',
@@ -71,6 +60,10 @@ export function BookCard({ book, isSelected = false, onToggleSelect, bulkMode = 
     }
   }
 
+  const tags = parseTags(book.tags)
+  const hasMultipleTags = tags.length > 3
+  const cardHeight = hasMultipleTags ? 'h-40 md:h-44' : 'h-32 md:h-36'
+
   return (
     <div className="relative">
       {bulkMode && (
@@ -92,7 +85,7 @@ export function BookCard({ book, isSelected = false, onToggleSelect, bulkMode = 
         </div>
       )}
       <Link href={bulkMode ? '#' : `/books/${book.id}`} onClick={handleCardClick}>
-        <Card className={`overflow-hidden hover:shadow-lg transition-all hover:scale-[1.02] cursor-pointer h-32 md:h-36 border-l-4 border-l-blue-500 ${
+        <Card className={`overflow-hidden hover:shadow-lg transition-all hover:scale-[1.02] cursor-pointer ${cardHeight} border-l-4 border-l-blue-500 ${
           isSelected ? 'ring-2 ring-primary' : ''
         }`}>
           <CardContent className="p-3 md:p-4 h-full">
@@ -116,34 +109,40 @@ export function BookCard({ book, isSelected = false, onToggleSelect, bulkMode = 
             )}
           </div>
           <div className="flex-1 min-w-0 flex flex-col justify-between overflow-hidden">
-            <div className="overflow-hidden">
+            <div className="flex-shrink-0 mb-2">
               <h3 className="font-semibold text-sm md:text-base line-clamp-2 leading-tight">{book.title}</h3>
               <p className="text-xs md:text-sm text-muted-foreground line-clamp-1 mt-0.5">{book.author}</p>
               {book.genre && (
                 <p className="text-xs text-muted-foreground line-clamp-1 hidden md:block mt-0.5">{book.genre}</p>
               )}
-              {parseTags(book.tags).length > 0 && (
-                <div className="flex flex-wrap gap-1 mt-1">
-                  {parseTags(book.tags).slice(0, 2).map((tag) => (
-                    <span
-                      key={tag}
-                      className={`text-xs px-1.5 py-0.5 rounded-full font-medium ${getTagColor(tag)}`}
-                    >
-                      {tag}
-                    </span>
-                  ))}
-                  {parseTags(book.tags).length > 2 && (
-                    <span className="text-xs text-muted-foreground">
-                      +{parseTags(book.tags).length - 2}
-                    </span>
-                  )}
-                </div>
-              )}
             </div>
-            <div className="flex items-center gap-1 md:gap-2 mt-1">
-              <span className={`text-xs px-2 py-0.5 rounded-full ${getStatusColor(book.status)}`}>
-                {book.status}
-              </span>
+            
+            {/* User Tags - Fixed spacing */}
+            <div className="flex-shrink-0 mb-2">
+              <div className="flex flex-wrap gap-1">
+                {tags.length > 0 ? (
+                  <>
+                    {tags.slice(0, hasMultipleTags ? 6 : 4).map((tag) => (
+                      <span
+                        key={tag}
+                        className={`text-xs px-1.5 py-0.5 rounded-full font-medium ${getTagColor(tag)}`}
+                      >
+                        {tag}
+                      </span>
+                    ))}
+                    {tags.length > (hasMultipleTags ? 6 : 4) && (
+                      <span className="text-xs text-muted-foreground">
+                        +{tags.length - (hasMultipleTags ? 6 : 4)}
+                      </span>
+                    )}
+                  </>
+                ) : (
+                  <span className="text-xs text-muted-foreground italic">No tags</span>
+                )}
+              </div>
+            </div>
+            
+            <div className="flex items-center gap-1 md:gap-2 flex-shrink-0">
               {book.rating && (
                 <div className="flex items-center gap-0.5">
                   {[...Array(5)].map((_, i) => (

@@ -33,7 +33,7 @@ export default function Home() {
     reading: 0,
     unread: 0,
   })
-  const [sortBy, setSortBy] = useState('title')
+  const [sortBy, setSortBy] = useState('author')
   const [filterStatus, setFilterStatus] = useState('')
   const [filterTag, setFilterTag] = useState('')
   const [showFilters, setShowFilters] = useState(false)
@@ -126,8 +126,10 @@ export default function Home() {
   }
 
   const handleTagFilterChange = (tag: string) => {
-    setFilterTag(tag)
-    fetchBooks(searchQuery, filterStatus, tag)
+    // Toggle the tag - if it's already selected, clear it
+    const newTag = filterTag === tag ? '' : tag
+    setFilterTag(newTag)
+    fetchBooks(searchQuery, filterStatus, newTag)
   }
 
   const toggleBookSelection = (bookId: string) => {
@@ -394,6 +396,15 @@ export default function Home() {
               onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
               className="flex-1 h-9"
             />
+            <select
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value)}
+              className="h-9 px-3 py-1 text-sm border border-input bg-background rounded-md focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+            >
+              <option value="author">Sort by Author</option>
+              <option value="title">Sort by Title</option>
+              <option value="rating">Sort by Rating</option>
+            </select>
             <Button onClick={handleSearch} variant="outline" size="sm" className="px-2 md:px-4">
               <Search className="h-4 w-4" />
             </Button>
@@ -419,87 +430,80 @@ export default function Home() {
           </div>
           
           {showFilters && (
-            <div className="flex flex-wrap gap-2 p-3 bg-muted/50 rounded-lg">
-              <div className="flex items-center gap-2">
-                <span className="text-sm font-medium">Status:</span>
-                <Button
-                  variant={filterStatus === '' ? 'default' : 'outline'}
-                  size="sm"
-                  onClick={() => handleFilterChange('')}
-                >
-                  All
-                </Button>
-                <Button
-                  variant={filterStatus === 'unread' ? 'default' : 'outline'}
-                  size="sm"
-                  onClick={() => handleFilterChange('unread')}
-                >
-                  To Read
-                </Button>
-                <Button
-                  variant={filterStatus === 'reading' ? 'default' : 'outline'}
-                  size="sm"
-                  onClick={() => handleFilterChange('reading')}
-                >
-                  Reading
-                </Button>
-                <Button
-                  variant={filterStatus === 'read' ? 'default' : 'outline'}
-                  size="sm"
-                  onClick={() => handleFilterChange('read')}
-                >
-                  Read
-                </Button>
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="text-sm font-medium">Tag:</span>
-                <Button
-                  variant={filterTag === '' ? 'default' : 'outline'}
-                  size="sm"
-                  onClick={() => handleTagFilterChange('')}
-                >
-                  All
-                </Button>
-                {allTags.slice(0, 4).map((tag) => (
+            <div className="bg-muted/50 rounded-lg p-4 space-y-4">
+              {/* Status Filter */}
+              <div className="space-y-2">
+                <h3 className="text-sm font-semibold text-foreground">Reading Status</h3>
+                <div className="flex flex-wrap gap-2">
                   <Button
-                    key={tag}
-                    variant={filterTag === tag ? 'default' : 'outline'}
+                    variant={filterStatus === '' ? 'default' : 'outline'}
                     size="sm"
-                    onClick={() => handleTagFilterChange(tag)}
+                    onClick={() => handleFilterChange('')}
                   >
-                    {tag}
+                    All Books
                   </Button>
-                ))}
-                {allTags.length > 4 && (
-                  <span className="text-xs text-muted-foreground">
-                    +{allTags.length - 4} more
-                  </span>
-                )}
+                  <Button
+                    variant={filterStatus === 'unread' ? 'default' : 'outline'}
+                    size="sm"
+                    onClick={() => handleFilterChange('unread')}
+                  >
+                    To Read
+                  </Button>
+                  <Button
+                    variant={filterStatus === 'reading' ? 'default' : 'outline'}
+                    size="sm"
+                    onClick={() => handleFilterChange('reading')}
+                  >
+                    Currently Reading
+                  </Button>
+                  <Button
+                    variant={filterStatus === 'read' ? 'default' : 'outline'}
+                    size="sm"
+                    onClick={() => handleFilterChange('read')}
+                  >
+                    Finished
+                  </Button>
+                </div>
               </div>
-              <div className="flex items-center gap-2">
-                <span className="text-sm font-medium">Sort:</span>
-                <Button
-                  variant={sortBy === 'title' ? 'default' : 'outline'}
-                  size="sm"
-                  onClick={() => setSortBy('title')}
-                >
-                  Title
-                </Button>
-                <Button
-                  variant={sortBy === 'author' ? 'default' : 'outline'}
-                  size="sm"
-                  onClick={() => setSortBy('author')}
-                >
-                  Author
-                </Button>
-                <Button
-                  variant={sortBy === 'rating' ? 'default' : 'outline'}
-                  size="sm"
-                  onClick={() => setSortBy('rating')}
-                >
-                  Rating
-                </Button>
-              </div>
+
+              {/* Tags Filter */}
+              {allTags.length > 0 && (
+                <div className="space-y-2">
+                  <h3 className="text-sm font-semibold text-foreground">Filter by Tags</h3>
+                  <div className="flex flex-wrap gap-2 max-h-32 overflow-y-auto justify-between">
+                    <div className="flex flex-wrap gap-2">
+                      {allTags.map((tag) => (
+                        <Button
+                          key={tag}
+                          variant={filterTag === tag ? 'default' : 'outline'}
+                          size="sm"
+                          onClick={() => handleTagFilterChange(tag)}
+                          className="text-xs"
+                        >
+                          {tag}
+                        </Button>
+                      ))}
+                    </div>
+                    <div className="flex-shrink-0">
+                      {filterTag && (
+                        <Button
+                          variant="destructive"
+                          size="sm"
+                          onClick={() => handleTagFilterChange('')}
+                          className="text-xs"
+                        >
+                          Clear
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                  {allTags.length === 0 && (
+                    <p className="text-xs text-muted-foreground italic">No tags found. Add tags to your books to filter by them.</p>
+                  )}
+                </div>
+              )}
+
+
             </div>
           )}
         </div>
