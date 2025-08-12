@@ -1,6 +1,6 @@
-# Personal Library Catalog
+# The Book Nook
 
-A simple web application to catalog and manage your personal book collection with authentication and Docker support.
+A simple web application to catalog and manage your personal book collection with wishlist functionality, authentication, and Docker support.
 
 ![screenshot](assets/screenshot.png)
 
@@ -8,10 +8,13 @@ A simple web application to catalog and manage your personal book collection wit
 
 - **User Authentication**: Secure login system with username/password
 - **Book Management**: Add, edit, and delete books from your library
+- **Wishlist Management**: Track books you want to read with priority levels (low, medium, high)
 - **Google Books Integration**: Search and import book details automatically
 - **Reading Status**: Track books as unread, currently reading, or read
 - **Ratings & Notes**: Add personal ratings (1-5 stars) and notes to books
-- **Search & Filter**: Search your library by title, author, or ISBN
+- **Tagging System**: Organize books and wishlist items with custom tags
+- **Search & Filter**: Search your library by title, author, ISBN, or tags
+- **Dark Mode**: Toggle between light and dark themes
 - **Statistics Dashboard**: View your reading progress and library stats
 - **Docker Support**: Easy deployment with Docker Compose
 
@@ -27,11 +30,13 @@ A simple web application to catalog and manage your personal book collection wit
 ### Option 1: Docker Compose (Recommended)
 
 1. Copy the environment file:
+
 ```bash
 cp .env.example .env
 ```
 
 2. Update the `.env` file with your desired credentials:
+
 ```
 DEFAULT_USERNAME=admin
 DEFAULT_PASSWORD=your-secure-password
@@ -39,6 +44,7 @@ JWT_SECRET=your-secret-key
 ```
 
 3. Run with Docker Compose:
+
 ```bash
 docker-compose up -d
 ```
@@ -48,26 +54,31 @@ docker-compose up -d
 ### Option 2: Local Development
 
 1. Install dependencies:
+
 ```bash
 npm install
 ```
 
 2. Copy and configure environment:
+
 ```bash
 cp .env.example .env
 ```
 
 3. Run database migrations:
+
 ```bash
 npx prisma migrate dev
 ```
 
 4. Seed the database with default user:
+
 ```bash
 npm run seed
 ```
 
 5. Start the development server:
+
 ```bash
 npm run dev
 ```
@@ -94,11 +105,20 @@ npm run dev
 
 - Click on any book card to view details and edit
 - Update reading status, add ratings, and personal notes
+- Add tags to organize your books
 - Delete books you no longer want to track
+
+### Managing Your Wishlist
+
+- Navigate to the wishlist page to see books you want to read
+- Set priority levels (low, medium, high) for wishlist items
+- Add notes about why you want to read specific books
+- Move books from wishlist to your library when you acquire them
 
 ### Database
 
 The app uses SQLite for data storage. The database file is located at:
+
 ```
 prisma/dev.db
 ```
@@ -106,11 +126,13 @@ prisma/dev.db
 ## Project Structure
 
 ```
-library-catalog/
+the-book-nook/
 ├── app/                  # Next.js app directory
 │   ├── api/             # API routes
 │   ├── add/             # Add book page
 │   ├── books/[id]/      # Book detail page
+│   ├── wishlist/        # Wishlist pages
+│   ├── debug/           # Debug utilities
 │   └── login/           # Login page
 ├── components/          # React components
 ├── lib/                 # Utility functions
@@ -140,9 +162,9 @@ docker-compose down -v
 
 ## Environment Variables
 
-| Variable | Description | Default |
-|----------|-------------|---------|
-| `DATABASE_URL` | SQLite database path | `file:./dev.db` |
-| `JWT_SECRET` | Secret key for JWT tokens | Required in production |
-| `DEFAULT_USERNAME` | Default admin username | `admin` |
-| `DEFAULT_PASSWORD` | Default admin password | `changeme` |
+| Variable           | Description               | Default                |
+| ------------------ | ------------------------- | ---------------------- |
+| `DATABASE_URL`     | SQLite database path      | `file:./dev.db`        |
+| `JWT_SECRET`       | Secret key for JWT tokens | Required in production |
+| `DEFAULT_USERNAME` | Default admin username    | `admin`                |
+| `DEFAULT_PASSWORD` | Default admin password    | `changeme`             |
