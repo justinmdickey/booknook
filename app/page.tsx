@@ -4,11 +4,12 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { BookCard } from '@/components/book-card'
+import AddBookModal from '@/components/add-book-modal'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { ThemeToggle } from '@/components/theme-toggle'
 import { TagInput } from '@/components/tag-input'
-import { Plus, Search, BookOpen, LogOut, Filter, CheckSquare, Square, Tag, Heart } from 'lucide-react'
+import { Plus, Search, BookOpen, LogOut, Filter, CheckSquare, Tag, Heart } from 'lucide-react'
 
 interface Book {
   id: string
@@ -42,6 +43,7 @@ export default function Home() {
   const [bulkMode, setBulkMode] = useState(false)
   const [showBulkTagEditor, setShowBulkTagEditor] = useState(false)
   const [bulkTags, setBulkTags] = useState<string[]>([])
+  const [showAddBookModal, setShowAddBookModal] = useState(false)
 
   useEffect(() => {
     fetchBooks()
@@ -532,12 +534,10 @@ export default function Home() {
             <BookOpen className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
             <h2 className="text-xl font-semibold mb-2">No books in your library yet</h2>
             <p className="text-muted-foreground mb-4">Start building your collection by adding your first book</p>
-            <Link href="/add">
-              <Button>
-                <Plus className="h-4 w-4 mr-2" />
-                Add Your First Book
-              </Button>
-            </Link>
+            <Button onClick={() => setShowAddBookModal(true)}>
+              <Plus className="h-4 w-4 mr-2" />
+              Add Your First Book
+            </Button>
           </div>
         ) : (
           <div className="flex gap-6">
@@ -621,14 +621,19 @@ export default function Home() {
       </main>
       
       {/* Floating Action Button */}
-      <Link href="/add">
-        <Button 
-          size="lg"
-          className="fixed bottom-6 right-6 h-14 w-14 rounded-full shadow-lg hover:shadow-xl transition-all hover:scale-110 z-50 bg-blue-500 hover:bg-blue-600 border-0 p-0 flex items-center justify-center"
-        >
-          <Plus className="h-6 w-6 text-black" />
-        </Button>
-      </Link>
+      <Button 
+        size="lg"
+        onClick={() => setShowAddBookModal(true)}
+        className="fixed bottom-6 right-6 h-14 w-14 rounded-full shadow-lg hover:shadow-xl transition-all hover:scale-110 z-50 bg-blue-500 hover:bg-blue-600 border-0 p-0 flex items-center justify-center"
+      >
+        <Plus className="h-6 w-6 text-black" />
+      </Button>
+
+      <AddBookModal 
+        isOpen={showAddBookModal} 
+        onClose={() => setShowAddBookModal(false)}
+        defaultDestination="library"
+      />
     </div>
   )
 }

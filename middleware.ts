@@ -5,9 +5,10 @@ export function middleware(request: NextRequest) {
   const token = request.cookies.get('auth-token')?.value
   const isLoginPage = request.nextUrl.pathname === '/login'
   const isApiAuth = request.nextUrl.pathname.startsWith('/api/auth')
+  const isOllamaApi = request.nextUrl.pathname === '/api/ollama'
   
-  // Allow access to login page and auth API
-  if (isLoginPage || isApiAuth) {
+  // Allow access to login page, auth API, and Ollama status API
+  if (isLoginPage || isApiAuth || isOllamaApi) {
     // If user is already logged in and tries to access login, redirect to home
     if (token && isLoginPage) {
       return NextResponse.redirect(new URL('/', request.url))
