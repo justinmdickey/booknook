@@ -7,7 +7,6 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { ThemeToggle } from '@/components/theme-toggle'
 import { Card, CardContent } from '@/components/ui/card'
-import AddBookModal from '@/components/add-book-modal'
 import { BookOpen, LogOut, Search, Filter, Plus, Star, Heart } from 'lucide-react'
 import Image from 'next/image'
 
@@ -33,7 +32,6 @@ export default function WishlistPage() {
   const [showFilters, setShowFilters] = useState(false)
   const [allTags, setAllTags] = useState<string[]>([])
   const [filterTag, setFilterTag] = useState('')
-  const [showAddBookModal, setShowAddBookModal] = useState(false)
 
   useEffect(() => {
     fetchWishlist()
@@ -183,6 +181,32 @@ export default function WishlistPage() {
       </header>
 
       <main className="container mx-auto px-4 py-4 md:py-8">
+        {/* Stats */}
+        <div className="flex justify-between items-center bg-muted/50 rounded-lg p-3 mb-4 text-sm">
+          <div className="text-center">
+            <div className="font-bold text-lg">{wishlistItems.length}</div>
+            <div className="text-muted-foreground">Total</div>
+          </div>
+          <div className="text-center">
+            <div className="font-bold text-lg text-red-600">
+              {wishlistItems.filter(item => item.priority === 'high').length}
+            </div>
+            <div className="text-muted-foreground">High Priority</div>
+          </div>
+          <div className="text-center">
+            <div className="font-bold text-lg text-yellow-600">
+              {wishlistItems.filter(item => item.priority === 'medium').length}
+            </div>
+            <div className="text-muted-foreground">Medium</div>
+          </div>
+          <div className="text-center">
+            <div className="font-bold text-lg text-green-600">
+              {wishlistItems.filter(item => item.priority === 'low').length}
+            </div>
+            <div className="text-muted-foreground">Low Priority</div>
+          </div>
+        </div>
+
         {/* Search and Filter Controls */}
         <div className="space-y-3 mb-6">
           <div className="flex gap-2">
@@ -294,10 +318,12 @@ export default function WishlistPage() {
             <Star className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
             <h2 className="text-xl font-semibold mb-2">Your wishlist is empty</h2>
             <p className="text-muted-foreground mb-4">Start adding books you want to read or buy</p>
-            <Button onClick={() => setShowAddBookModal(true)}>
-              <Plus className="h-4 w-4 mr-2" />
-              Add Your First Wishlist Item
-            </Button>
+            <Link href="/add">
+              <Button>
+                <Plus className="h-4 w-4 mr-2" />
+                Add Your First Wishlist Item
+              </Button>
+            </Link>
           </div>
         ) : (
           <div className="grid gap-3 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
@@ -368,19 +394,14 @@ export default function WishlistPage() {
       </main>
       
       {/* Floating Action Button */}
-      <Button 
-        size="lg"
-        onClick={() => setShowAddBookModal(true)}
-        className="fixed bottom-6 right-6 h-14 w-14 rounded-full shadow-lg hover:shadow-xl transition-all hover:scale-110 z-50 bg-blue-500 hover:bg-blue-600 border-0 p-0 flex items-center justify-center"
-      >
-        <Plus className="h-6 w-6 text-black" />
-      </Button>
-
-      <AddBookModal 
-        isOpen={showAddBookModal} 
-        onClose={() => setShowAddBookModal(false)}
-        defaultDestination="wishlist"
-      />
+      <Link href="/add">
+        <Button 
+          size="lg"
+          className="fixed bottom-6 right-6 h-14 w-14 rounded-full shadow-lg hover:shadow-xl transition-all hover:scale-110 z-50 bg-blue-500 hover:bg-blue-600 border-0 p-0 flex items-center justify-center"
+        >
+          <Plus className="h-6 w-6 text-black" />
+        </Button>
+      </Link>
     </div>
   )
 }
