@@ -29,13 +29,19 @@ A simple web application to catalog and manage your personal book collection wit
 
 ### Option 1: Docker Compose (Recommended)
 
-1. Copy the environment file:
+1. Create a docker-compose.yml file from the template:
+
+```bash
+cp docker-compose.yml.template docker-compose.yml
+```
+
+2. Create and configure your `.env` file:
 
 ```bash
 cp .env.example .env
 ```
 
-2. Update the `.env` file with your desired credentials:
+Update the `.env` file with your desired credentials:
 
 ```
 DEFAULT_USERNAME=admin
@@ -43,11 +49,13 @@ DEFAULT_PASSWORD=your-secure-password
 JWT_SECRET=your-secret-key
 ```
 
-3. Run with Docker Compose:
+3. Start the application:
 
 ```bash
 docker-compose up -d
 ```
+
+The Docker image is automatically built and published via GitHub Actions on each push to master. The compose file pulls the latest pre-built image from GitHub Container Registry.
 
 4. Open [http://localhost:3000](http://localhost:3000) and login with your credentials
 
@@ -136,9 +144,9 @@ the-book-nook/
 │   └── login/           # Login page
 ├── components/          # React components
 ├── lib/                 # Utility functions
-├── prisma/             # Database schema
-├── docker-compose.yml   # Docker Compose configuration
-└── Dockerfile          # Docker image configuration
+├── prisma/                    # Database schema
+├── docker-compose.yml.template # Docker Compose template
+└── Dockerfile                 # Docker image configuration
 ```
 
 ## Docker Commands
@@ -153,12 +161,14 @@ docker-compose down
 # View logs
 docker-compose logs -f
 
-# Rebuild after changes
-docker-compose up -d --build
+# Pull latest image and restart
+docker-compose pull && docker-compose up -d
 
 # Remove volumes (reset database)
 docker-compose down -v
 ```
+
+**Note**: The Docker image is automatically built via GitHub Actions on push to master. When deploying, docker-compose will pull the latest pre-built image from `ghcr.io/justinmdickey/booknook:latest`.
 
 ## Environment Variables
 
