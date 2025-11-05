@@ -50,3 +50,6 @@ prisma/dev.db
 prisma/dev.db-journal
 *.db
 *.db-journal
+
+# Docker compose (use template)
+docker-compose.yml
