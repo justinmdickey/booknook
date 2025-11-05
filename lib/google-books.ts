@@ -24,9 +24,18 @@ export interface GoogleBooksResponse {
   totalItems: number
 }
 
-export async function searchGoogleBooks(query: string): Promise<GoogleBooksResponse> {
+export interface SearchOptions {
+  maxResults?: number
+  startIndex?: number
+}
+
+export async function searchGoogleBooks(
+  query: string, 
+  options: SearchOptions = {}
+): Promise<GoogleBooksResponse> {
+  const { maxResults = 40, startIndex = 0 } = options
   const encodedQuery = encodeURIComponent(query)
-  const url = `https://www.googleapis.com/books/v1/volumes?q=${encodedQuery}&maxResults=20`
+  const url = `https://www.googleapis.com/books/v1/volumes?q=${encodedQuery}&maxResults=${maxResults}&startIndex=${startIndex}`
   
   try {
     const response = await fetch(url)
