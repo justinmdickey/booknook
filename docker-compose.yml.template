@@ -1,8 +1,7 @@
 services:
   book-nook:
-    build:
-      context: .
-      dockerfile: Dockerfile
+    image: ghcr.io/justinmdickey/booknook:latest
+    pull_policy: always
     ports:
       - "3000:3000"
     environment:
