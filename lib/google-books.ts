@@ -35,7 +35,12 @@ export async function searchGoogleBooks(
 ): Promise<GoogleBooksResponse> {
   const { maxResults = 40, startIndex = 0 } = options
   const encodedQuery = encodeURIComponent(query)
-  const url = `https://www.googleapis.com/books/v1/volumes?q=${encodedQuery}&maxResults=${maxResults}&startIndex=${startIndex}`
+  // Without an API key, requests use Google's shared anonymous quota and get
+  // throttled to 429 almost immediately from a datacenter/NAT egress IP. Set
+  // GOOGLE_BOOKS_API_KEY to use the project's own quota.
+  const apiKey = process.env.GOOGLE_BOOKS_API_KEY
+  const keyParam = apiKey ? `&key=${apiKey}` : ''
+  const url = `https://www.googleapis.com/books/v1/volumes?q=${encodedQuery}&maxResults=${maxResults}&startIndex=${startIndex}${keyParam}`
   
   try {
     const response = await fetch(url)
