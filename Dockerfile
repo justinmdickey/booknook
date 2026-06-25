@@ -41,8 +41,15 @@ COPY --from=builder --chown=nextjs:nodejs /app/public ./public
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 COPY --from=builder --chown=nextjs:nodejs /app/prisma ./prisma
-COPY --from=builder --chown=nextjs:nodejs /app/node_modules/.prisma ./node_modules/.prisma
-COPY --from=builder --chown=nextjs:nodejs /app/node_modules/@prisma ./node_modules/@prisma
+# Full node_modules from the builder so the runtime has the `prisma` CLI (for
+# `migrate deploy`) and `tsx` (for the seed script) — the standalone output's
+# pruned node_modules has neither. The .next/standalone copy above lays down its
+# own minimal node_modules first; this overlays the complete set on top.
+COPY --from=builder --chown=nextjs:nodejs /app/node_modules ./node_modules
+
+# Entrypoint: runs migrations (fail-loud) + seed before starting the server.
+COPY --chown=nextjs:nodejs docker-entrypoint.sh ./docker-entrypoint.sh
+RUN chmod +x ./docker-entrypoint.sh
 
 # Create directory for SQLite database with proper permissions
 RUN mkdir -p /app/data && \
@@ -57,7 +64,4 @@ ENV NODE_ENV=production
 ENV HOSTNAME="0.0.0.0"
 ENV PORT=3000
 
-# Run database setup and start the application
-CMD npx prisma migrate deploy && \
-    npx prisma db seed || true && \
-    node server.js
+CMD ["./docker-entrypoint.sh"]
