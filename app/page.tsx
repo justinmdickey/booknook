@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { ThemeToggle } from '@/components/theme-toggle'
 import { TagInput } from '@/components/tag-input'
-import { Plus, Search, BookOpen, LogOut, Filter, CheckSquare, Square, Tag, Heart } from 'lucide-react'
+import { Plus, Search, BookOpen, LogOut, Filter, CheckSquare, Square, Tag, Heart, Settings } from 'lucide-react'
 
 interface Book {
   id: string
@@ -299,6 +299,12 @@ export default function Home() {
                 <Button size="sm" variant="outline" className="px-2 md:px-4">
                   <Heart className="h-4 w-4 md:mr-2" />
                   <span className="hidden md:inline">Wishlist</span>
+                </Button>
+              </Link>
+              <Link href="/settings">
+                <Button size="sm" variant="outline" className="px-2 md:px-4">
+                  <Settings className="h-4 w-4 md:mr-2" />
+                  <span className="hidden md:inline">Settings</span>
                 </Button>
               </Link>
               <Button variant="outline" size="sm" onClick={handleLogout} className="px-2 md:px-4">
